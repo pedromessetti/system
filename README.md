@@ -2,23 +2,6 @@
     Investiment Analysis System
 </h1>
 
-<p>
-The Investment Analysis System is a Python application that collects stock data from various financial websites and generates CSV files for analysis. It uses web scraping techniques to gather data from the following sources:
-
-- [Fundamentus](https://www.Fundamentus.com.br/resultado.php): Scrapes fundamental stock data from Fundamentus and generates a `Fundamentus.csv` file.
-- [Status Invest](https://statusinvest.com.br/): Downloads a CSV file from Status Invest containing advanced search results and saves it as `status_invest.csv`.
-- [Invest Site](https://www.investsite.com.br/): Scrapes stock selection data from Invest Site and generates a `invest_site.csv` file.
-</p>
-
-## Index
-- [Index](#index)
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-- [License](#license)
-- [Learnings](#learnings)
-- [Contributing](#contributing)
-- [Author](#author)
-
 ## Prerequisites
 
 Before running the application, ensure that you have the following prerequisites installed:
@@ -28,6 +11,7 @@ Before running the application, ensure that you have the following prerequisites
 - Requests
 - Shutil
 - MySQL
+- Pandas
 
 You can install the dependencies by running the following command:
 
@@ -39,7 +23,7 @@ To use the script, follow these steps:
 
 1. Clone the repository:
 
-        git clone https://github.com/pedromessetti/investment-analysis-system.git
+        git clone https://github.com/pedromessetti/system.git
 
 2. `cd` to the project directory
 
@@ -47,7 +31,7 @@ To use the script, follow these steps:
 
         python3.10 scraper.py
 
-4. Store the data:
+4. Store data in the database:
 
         python3.10 store.py
 
@@ -56,13 +40,6 @@ This will execute the scraping functions and store the necessary CSV files in th
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## Learnings
-
-The project was developed using Python 3.10 and various libraries. Here are some learnings that I have with the following tools:
-
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/): A library for parsing HTML and XML.
-- [Requests](https://docs.python-requests.org/): A library for making HTTP requests.
 
 ## Contributing
 
