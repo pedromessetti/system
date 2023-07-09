@@ -140,4 +140,5 @@ class Database:
 
 
 if __name__ == '__main__':
-    database = Database()
+    Database()
+    c.shutil.rmtree('__pycache__')
