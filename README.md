@@ -31,7 +31,7 @@ To use the script, follow these steps:
         
         class Database:
                 def __init__(self):
-                self.user='ypur_user' # put your user here
+                self.user='your_user' # put your user here
                 self.password='your_password' # put your password here
 
 4. Run the scraper:
@@ -42,7 +42,7 @@ To use the script, follow these steps:
 
         python3.10 store.py
 
-OBS: At first you be asked to put your root password for create database, table and grant all privileges to your user
+OBS: At first running you be asked to put your root password for create database, table and grant all privileges to your user
 
 ## License
 

@@ -4,7 +4,7 @@ import config
 
 class Database:
     def __init__(self):
-        self.user='ypur_user' # put your user here
+        self.user='your_user' # put your user here
         self.password='your_password' # put your password here
         self.database = 'investment_analysis'
         self.table = 'tb_scraping'
