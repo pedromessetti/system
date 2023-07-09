@@ -3,11 +3,6 @@ import json
 CONFIG_FILE = 'config.json'
 
 
-def save_config(data):
-    with open('config.json', 'w') as f:
-        json.dump(data, f)
-
-
 def load_config():
     try:
         with open('config.json', 'r') as f:

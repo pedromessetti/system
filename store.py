@@ -4,6 +4,8 @@ import config
 
 class Database:
     def __init__(self):
+        self.user='ypur_user' # put your user here
+        self.password='your_password' # put your password here
         self.database = 'investment_analysis'
         self.table = 'tb_scraping'
         self.connection = Database.get_user(self)
@@ -25,9 +27,6 @@ class Database:
             print(f"{c.CHECKMARK}Data inserted in {self.table} table{c.ENDC}")
         else:
             print(f"{c.CROSSMARK}Table '{self.table}' not found{c.ENDC}")
-            if not config.is_initialized():
-                Database.create_guest_user(self)
-                config.set_initialized()
 
         self.cursor.close()
 
@@ -76,11 +75,16 @@ class Database:
                         )
                     ''')
                     print(f"{c.CHECKMARK}Table '{self.table}' created")
+                    try: 
+                        cursor.execute(f"GRANT ALL PRIVILEGES ON {self.database}.* TO '{self.user}'@'localhost'")
+                        cursor.execute("FLUSH PRIVILEGES")
+                        print(f"{c.CHECKMARK}User '{self.user}' privileges sucess!{c.ENDC}")
+                    except c.mysql.connector.Error as error:
+                        print(f"{c.CROSSMARK}Failed: {error}{c.ENDC}")
+                        exit(1)
                 else:
                     cursor.execute(f"USE {self.database}")
                     print(f"{c.OKGREEN}Connection {c.OK}{c.ENDC}")
-
-                Database.create_guest_user(cursor)
                 config.set_initialized()
 
                 return connection
@@ -91,8 +95,8 @@ class Database:
             try:
                 connection = c.mysql.connector.connect(
                     host='localhost',
-                    user='guest',
-                    password='paS$word123',
+                    user=self.user,
+                    password=self.password,
                     database=self.database
                 )
                 cursor = connection.cursor()
@@ -101,15 +105,6 @@ class Database:
             except c.mysql.connector.Error as error:
                 print(f"{c.CROSSMARK}Failed: {error}{c.ENDC}")
                 exit(1)
-
-    def create_guest_user(cursor):
-        try:
-            cursor.execute("CREATE USER 'guest'@'localhost' IDENTIFIED BY 'paS$word123'")
-            cursor.execute("GRANT ALL PRIVILEGES ON investment_analysis.* TO 'guest'@'localhost'")
-            cursor.execute("FLUSH PRIVILEGES")
-        except c.mysql.connector.Error as error:
-            print(f"{c.CROSSMARK}Failed: {error}{c.ENDC}")
-            exit(1)
 
 
     def insert_data(self, df):
