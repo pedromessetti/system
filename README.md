@@ -27,15 +27,22 @@ To use the script, follow these steps:
 
 2. `cd` to the project directory
 
-3. Run the scraper:
+3. Open the `store.py` file and modify the following line with your MySQL user and password
+        
+        class Database:
+                def __init__(self):
+                self.user='ypur_user' # put your user here
+                self.password='your_password' # put your password here
+
+4. Run the scraper:
 
         python3.10 scraper.py
 
-4. Store data in the database:
+5. Store data in the database:
 
         python3.10 store.py
 
-This will execute the scraping functions and store the necessary CSV files in the `csv` directory.
+OBS: At first you be asked to put your root password for create database, table and grant all privileges to your user
 
 ## License
 
