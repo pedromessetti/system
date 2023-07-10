@@ -1,3 +1,5 @@
+# -*- coding: iso-8859-15 -*-
+
 from bs4 import BeautifulSoup
 import common as c
 import requests

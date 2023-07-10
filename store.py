@@ -1,3 +1,5 @@
+# -*- coding: iso-8859-15 -*-
+
 import mysql.connector
 import pandas as pd
 import common as c
@@ -7,8 +9,8 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                     host='localhost',
-                    user='your_user', # <-- put your user here
-                    password='your_password' # <-- put your password here
+                    user='admin', # <-- put your user here
+                    password='Pedro2@13' # <-- put your password here
                 )
         self.cursor = self.connection.cursor()
         self.table = 'tb_scraping'
@@ -24,7 +26,7 @@ class Database:
 
         for source in c.sources:
             try:
-                df = pd.read_csv(f'./csv/{source["file_name"]}')
+                df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='ISO-8859-1')
                 df['fonte'] = source['name']
                 df['data'] = source['file_name'].split('_')[1].split('.')[0]
                 df = Cleaner(df).clean()
