@@ -7,8 +7,8 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                     host='localhost',
-                    user='pedro', # <-- put your user here
-                    password='Pedro2@13' # <-- put your password here
+                    user='your_user', # <-- put your user here
+                    password='your_password' # <-- put your password here
                 )
         self.cursor = self.connection.cursor()
         self.table = 'tb_scraping'
