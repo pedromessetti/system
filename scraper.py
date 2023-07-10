@@ -1,4 +1,8 @@
+from bs4 import BeautifulSoup
 import common as c
+import requests
+import csv
+import os
 
 
 class Scraper:
@@ -7,8 +11,8 @@ class Scraper:
         self.headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'}
         self.file_name = file_name
         try:
-            self.response = c.requests.get(self.url, headers=self.headers)
-        except c.requests.exceptions.ConnectionError as error:
+            self.response = requests.get(self.url, headers=self.headers)
+        except requests.exceptions.ConnectionError as error:
             print(f'{c.CROSSMARK}{self.file_name}\nError: {c.ENDC}{error}')
 
     
@@ -22,10 +26,10 @@ class Scraper:
     def generate_csv(self):
         try:
             if self.response.status_code == 200:
-                soup = c.BeautifulSoup(self.response.content, 'html.parser')
+                soup = BeautifulSoup(self.response.content, 'html.parser')
 
                 with open(self.file_name, 'w', newline='') as csv_file:
-                    writer = c.csv.writer(csv_file)
+                    writer = csv.writer(csv_file)
                     for tr in soup.find_all('tr'):
                         data = []
                         for th in tr.find_all('th'):
@@ -41,11 +45,11 @@ class Scraper:
 
                 if self.file_name == f'InvestSite_{c.date.today()}.csv':
                     with open(self.file_name, 'r') as csv_file:
-                        reader = c.csv.reader(csv_file)
+                        reader = csv.reader(csv_file)
                         rows = list(reader)[6:]
 
                     with open(self.file_name, 'w', newline='') as csv_file:
-                        writer = c.csv.writer(csv_file)
+                        writer = csv.writer(csv_file)
                         writer.writerows(rows)
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
@@ -63,7 +67,7 @@ class Scraper:
                     csv_file.write(self.response.content)
 
                 with open(self.file_name, 'r') as csv_file:
-                    reader = c.csv.reader(csv_file, delimiter=';')
+                    reader = csv.reader(csv_file, delimiter=';')
                     modified_rows = []
                     for i, row in enumerate(reader):
                         if i == 0:
@@ -72,7 +76,7 @@ class Scraper:
                             modified_rows.append([cell.replace('.', '').replace(',', '.') if cell else '0' for cell in row])
 
                 with open(self.file_name, 'w', newline='') as csv_file:
-                    writer = c.csv.writer(csv_file)
+                    writer = csv.writer(csv_file)
                     writer.writerows(modified_rows)
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
@@ -84,13 +88,13 @@ class Scraper:
 
 
 if __name__ == '__main__':
-    if not c.os.path.exists('csv'):
-        c.os.mkdir('csv')
+    if not os.path.exists('csv'):
+        os.mkdir('csv')
         print(f'{c.CHECKMARK}CSV directory created{c.ENDC}\n')
     else:
-        for file in c.os.listdir('./csv'):
+        for file in os.listdir('./csv'):
             if not file.endswith(f'_{c.date.today()}.csv'):
-                c.os.remove(f'./csv/{file}')
+                os.remove(f'./csv/{file}')
                 print(f'{c.CROSSMARK}Removed {file}{c.ENDC}\n')
     for source in c.sources:
         Scraper(source['url'], source['file_name']).run(source['type'])
