@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-15 -*-
+# -*- coding: iso-8859-1 -*-
 
 import mysql.connector
 import pandas as pd
@@ -9,11 +9,11 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                     host='localhost',
-                    user='admin', # <-- put your user here
-                    password='Pedro2@13' # <-- put your password here
+                    user='your_user_here', # <-- put your user here
+                    password='your_password_here' # <-- put your password here
                 )
         self.cursor = self.connection.cursor()
-        self.table = 'tb_scraping'
+        self.table = 'tb_scraping'  
         self.database = 'investment_analysis'
 
         self.cursor.execute(f"SHOW DATABASES LIKE '{self.database}'")
@@ -26,7 +26,7 @@ class Database:
 
         for source in c.sources:
             try:
-                df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='ISO-8859-1')
+                df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='iso-8859-1')
                 df['fonte'] = source['name']
                 df['data'] = source['file_name'].split('_')[1].split('.')[0]
                 df = Cleaner(df).clean()
@@ -145,11 +145,13 @@ class Cleaner:
         
     def invest_site(self):
         self.df = self.df.rename(columns={'ação': 'ativo'})
-        self.df = self.df.rename(columns={'p': 'cotacao'})
-        self.df = self.df.rename(columns={'p_lucro': 'p_l'})
-        self.df = self.df.rename(columns={'p_vpa': 'p_vp'})
-        self.df = self.df.rename(columns={'p_rec_líq_': 'psr'})
-        self.df = self.df.rename(columns={'p_ativo_total': 'p_ativo'})
+        self.df = self.df.rename(columns={'preço': 'cotacao'})
+        self.df = self.df.rename(columns={'preço_lucro': 'p_l'})
+        self.df = self.df.rename(columns={'preço_vpa': 'p_vp'})
+        self.df = self.df.rename(columns={'preço_rec_líq_': 'psr'})
+        self.df = self.df.rename(columns={'preço_ativo_total': 'p_ativo'})
+        self.df = self.df.rename(columns={'preço_cap_giro': 'p_cap_giro'})
+        self.df = self.df.rename(columns={'preço_ebit': 'p_ebit'})
         self.df = self.df.rename(columns={'margem_ebit': 'mrg_ebit'})
         self.df = self.df.rename(columns={'margem_líquida': 'mrg_liq'})
         self.df = self.df.rename(columns={'roinvc': 'roic'})
