@@ -15,7 +15,7 @@ class Scraper:
         try:
             self.response = requests.get(self.url, headers=self.headers)
         except requests.exceptions.ConnectionError as error:
-            print(f'{c.CROSSMARK}{self.file_name}\nError: {c.ENDC}{error}')
+            print(f'KO - {self.file_name}\nError: {error}')
 
     
     def run(self, type):
@@ -55,11 +55,11 @@ class Scraper:
                         writer.writerows(rows)
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
-                print(f'{c.CHECKMARK}{self.file_name}{c.ENDC}')
+                print(f'OK - {self.file_name}')
             else:
-                print(f'{c.CROSSMARK}{self.file_name}\nError: Response Status Code {c.BOLD}{self.response.status_code}{c.ENDC}')
+                print(f'KO - {self.file_name}\nError: Response Status {self.response.status_code}')
         except Exception as error:
-            print(f'{c.CROSSMARK}{self.file_name}\nError: {c.ENDC}{error}')
+            print(f'KO - {self.file_name}\nError: {error}')
 
 
     def download_csv(self):
@@ -82,22 +82,20 @@ class Scraper:
                     writer.writerows(modified_rows)
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
-                print(f'{c.CHECKMARK}{self.file_name}{c.ENDC}')
+                print(f'OK - {self.file_name}')
             else:
-                print(f'{c.CROSSMARK}{self.file_name}\nError: Response Status Code {c.BOLD}{self.response.status_code}{c.ENDC}')
+                print(f'KO - {self.file_name}\nError: Response Status {self.response.status_code}')
         except Exception as error:
-            print(f'{c.CROSSMARK}{self.file_name}\nError: {c.ENDC}{error}')
+            print(f'KO - {self.file_name}\nError: {error}')
 
 
 if __name__ == '__main__':
     if not os.path.exists('csv'):
         os.mkdir('csv')
-        print(f'{c.CHECKMARK}CSV directory created{c.ENDC}\n')
     else:
         for file in os.listdir('./csv'):
             if not file.endswith(f'_{c.date.today()}.csv'):
                 os.remove(f'./csv/{file}')
-                print(f'{c.CROSSMARK}Removed {file}{c.ENDC}\n')
     for source in c.sources:
         Scraper(source['url'], source['file_name']).run(source['type'])
     c.shutil.rmtree('__pycache__')

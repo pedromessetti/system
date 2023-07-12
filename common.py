@@ -4,20 +4,6 @@ from datetime import date
 import shutil
 
 
-# MACRO VARIABLES
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
-ENDC = '\033[0m' # End of color
-OKBLUE = '\033[94m'
-OKGREEN = '\033[92m' # Success
-FAIL = '\033[91m' # Error
-WARNING = f'{ENDC}\033[93m' # Warning
-WHITE = '\033[37m'
-CHECKMARK = f"{ENDC}{OKGREEN}✔ "
-CROSSMARK = f"{ENDC}{FAIL}✘ "
-OK = f"{ENDC}{OKGREEN}[{WHITE}OK{OKGREEN}]"
-
-# SCRAPING VARIABLES
 sources = [
     {
         'name': 'Fundamentus',

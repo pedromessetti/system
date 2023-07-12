@@ -9,8 +9,8 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                     host='localhost',
-                    user='your_user_here', # <-- put your user here
-                    password='your_password_here' # <-- put your password here
+                    user='your_user', # <-- put your user here
+                    password='your_password' # <-- put your password here
                 )
         self.cursor = self.connection.cursor()
         self.table = 'tb_scraping'  
@@ -22,7 +22,6 @@ class Database:
             Database.create(self)
         else:
             self.cursor.execute(f"USE {self.database}")
-            print(f"{c.OKGREEN}Connection {c.OK}{c.ENDC}")
 
         for source in c.sources:
             try:
@@ -32,15 +31,14 @@ class Database:
                 df = Cleaner(df).clean()
                 Database.insert_data(self, df)
             except pd.errors.ParserError as er:
-                print(f"{c.CROSSMARK}Failed: {er}{c.ENDC}")
-        print(f"{c.CHECKMARK}Data inserted in {self.table} table{c.ENDC}")
+                print(f"KO - Insert data from {source['name']}: {er}")
+        print(f"OK - Data insert in {self.table}")
 
         self.cursor.close()
 
     def create(self):
         try:
             self.cursor.execute(f"CREATE DATABASE {self.database}")
-            print(f"{c.CHECKMARK}Database '{self.database}' created{c.ENDC}")
             self.cursor.execute(f"USE {self.database}")
             self.cursor.execute(f'''
                 CREATE TABLE {self.table} (
@@ -70,9 +68,8 @@ class Database:
                     cresc_rec_5anos FLOAT(10,2)
                 )
             ''')
-            print(f"{c.CHECKMARK}Table '{self.table}' created")
         except mysql.connector.Error as error:
-            print(f"{c.CROSSMARK}Failed: {error}{c.ENDC}")
+            print(f"KO - Creation: {error}")
             exit(1)
 
     def insert_data(self, df):
@@ -99,7 +96,7 @@ class Database:
                 self.cursor.execute(query, tuple(converted_row))
             self.connection.commit()
         except mysql.connector.Error as error:
-            print(f"{c.CROSSMARK}Failed to insert data from {df['fonte'][0]}: {error}{c.ENDC}")
+            print(f"KO - Insert data from {df['fonte'][0]}: {error}")
 
 
 class Cleaner:
