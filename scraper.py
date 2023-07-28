@@ -35,7 +35,7 @@ class Scraper:
                     for tr in soup.find_all('tr'):
                         data = []
                         for th in tr.find_all('th'):
-                            data.append(th.text.strip().lower().replace('.',' ').replace(' ', '_').replace('/', '_').replace('preço', 'p'))
+                            data.append(th.text.strip().lower().replace('.',' ').replace(' ', '_').replace('/', '_'))
                         if data:
                             writer.writerow(data)
                             continue
