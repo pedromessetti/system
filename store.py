@@ -9,8 +9,9 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                     host='localhost',
-                    user='ias_admin', # <-- put your user here
-                    password='r&hgEV4CC!8&76Nk' # <-- put your password here
+                    user='your_user', # <-- put your user here
+                    password='your_password', # <-- put your password here
+                    auth_plugin='mysql_native_password'
                 )
         self.cursor = self.connection.cursor()
         self.table = 'tb_scraping'  
@@ -23,21 +24,6 @@ class Database:
         else:
             self.cursor.execute(f"USE {self.database}")
 
-        for source in c.sources:
-            try:
-                # Windows
-                #df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='iso-8859-1')
-                # Linux and MacOS
-                df = pd.read_csv(f'./csv/{source["file_name"]}')
-                df['fonte'] = source['name']
-                df['data'] = source['file_name'].split('_')[1].split('.')[0]
-                df = Cleaner(df).clean()
-                Database.insert_data(self, df)
-            except pd.errors.ParserError as er:
-                print(f"KO - Insert data from {source['name']}: {er}")
-        print(f"OK - Data insert in {self.table}")
-
-        self.cursor.close()
 
     def create(self):
         try:
@@ -75,31 +61,45 @@ class Database:
             print(f"KO - Creation: {error}")
             exit(1)
 
-    def insert_data(self, df):
-        self.cursor.execute(f"DESCRIBE {self.table}")
-        columns = [column[0] for column in self.cursor.fetchall() if column[0] != 'id']
-        df_filtered = df[columns]
-        query = f'''
-            INSERT INTO {self.table} (
-                {', '.join(columns)}
-            )
-            VALUES (
-                {', '.join(['%s' for _ in columns])}
-            )
-        '''
-        try:
-            for _, row in df_filtered.iterrows():
-                converted_row = []
-                for value in row:
-                    try:
-                        numeric_value = float(value)
-                        converted_row.append((f'{numeric_value:.2f}'))
-                    except ValueError:
-                        converted_row.append(value)
-                self.cursor.execute(query, tuple(converted_row))
-            self.connection.commit()
-        except mysql.connector.Error as error:
-            print(f"KO - Insert data from {df['fonte'][0]}: {error}")
+
+    def insert_data(self):
+        for source in c.sources:
+            try:
+                # Windows
+                #df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='iso-8859-1')
+                # Linux and MacOS
+                df = pd.read_csv(f'./csv/{source["file_name"]}', encoding='iso-8859-1')
+                df['fonte'] = source['name']
+                df['data'] = source['file_name'].split('_')[1].split('.')[0]
+                df = Cleaner(df).clean()
+                self.cursor.execute(f"DESCRIBE {self.table}")
+                columns = [column[0] for column in self.cursor.fetchall() if column[0] != 'id']
+                df_filtered = df[columns]
+                query = f'''
+                    INSERT INTO {self.table} (
+                        {', '.join(columns)}
+                    )
+                    VALUES (
+                        {', '.join(['%s' for _ in columns])}
+                    )
+                '''
+                try:
+                    for _, row in df_filtered.iterrows():
+                        converted_row = []
+                        for value in row:
+                            try:
+                                numeric_value = float(value)
+                                converted_row.append((f'{numeric_value:.2f}'))
+                            except ValueError:
+                                converted_row.append(value)
+                        self.cursor.execute(query, tuple(converted_row))
+                    self.connection.commit()
+                except mysql.connector.Error as error:
+                    print(f"KO - Insert data from {df['fonte'][0]}: {error}")
+            except pd.errors.ParserError as er:
+                print(f"KO - Insert data from {source['name']}: {er}")
+        print(f"OK - Data insert in {self.table}")
+        self.cursor.close()
 
 
 class Cleaner:
@@ -176,4 +176,5 @@ class Cleaner:
 
 if __name__ == '__main__':
     Database()
+    Database().insert_data()
     c.shutil.rmtree('__pycache__')
