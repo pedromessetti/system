@@ -27,13 +27,17 @@ To use the script, follow these steps:
 
 2. `cd` to the project directory
 
-3. Open the `store.py` file and modify the following line with your MySQL user and password
-        
-        class Database:
-                def __init__(self):
-                self.user='your_user' # put your user here
-                self.password='your_password' # put your password here
-
+3. Open the `store.py` file and modify the following line with your MySQL user and password (user has to have super user privileges)
+```
+class Database:
+    def __init__(self):
+        self.connection = mysql.connector.connect(
+                    host='localhost',
+                    user='your_user', # <-- put your user here
+                    password='your_password', # <-- put your password here
+                    auth_plugin='mysql_native_password'
+                )
+```
 4. Run the scraper:
 
         python3.10 scraper.py
@@ -42,7 +46,10 @@ To use the script, follow these steps:
 
         python3.10 store.py
 
-OBS: At first running you be asked to put your root password for create database, table and grant all privileges to your user
+6. Process the data:
+
+        python3.10 processor.py
+
 
 ## License
 
