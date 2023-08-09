@@ -1,8 +1,10 @@
 # -*- coding: iso-8859-1 -*-
 
+from alert import send_alert
 from bs4 import BeautifulSoup
 import common as c
 import requests
+import time
 import csv
 import os
 
@@ -15,7 +17,11 @@ class Scraper:
         try:
             self.response = requests.get(self.url, headers=self.headers)
         except requests.exceptions.ConnectionError as error:
-            print(f'KO - {self.file_name}\nError: {error}')
+            # Wait for 5 minutes and try again
+            time.sleep(300)
+            self.response = requests.get(self.url, headers=self.headers)
+        except Exception as error:
+            send_alert(f'KO - {self.file_name}\nError: {error}')
 
     
     def run(self, type):
@@ -56,10 +62,8 @@ class Scraper:
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
                 print(f'OK - {self.file_name}')
-            else:
-                print(f'KO - {self.file_name}\nError: Response Status {self.response.status_code}')
         except Exception as error:
-            print(f'KO - {self.file_name}\nError: {error}')
+            send_alert(f'KO - {self.file_name}\nError: {error}')
 
 
     def download_csv(self):
@@ -83,10 +87,8 @@ class Scraper:
 
                 c.shutil.move(self.file_name, 'csv/' + self.file_name)
                 print(f'OK - {self.file_name}')
-            else:
-                print(f'KO - {self.file_name}\nError: Response Status {self.response.status_code}')
         except Exception as error:
-            print(f'KO - {self.file_name}\nError: {error}')
+            send_alert(f'KO - {self.file_name}\nError: {error}')
 
 
 if __name__ == '__main__':

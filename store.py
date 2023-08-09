@@ -8,14 +8,14 @@ import common as c
 class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
-                    host='localhost',
-                    user='your_user', # <-- put your user here
-                    password='your_password', # <-- put your password here
-                    auth_plugin='mysql_native_password'
-                )
+                host='localhost',
+                user='root', # <-- put your user here
+                password='Messetti2@13', # <-- put your password here
+                auth_plugin='mysql_native_password'
+            )
         self.cursor = self.connection.cursor()
-        self.table = 'tb_scraping'  
-        self.database = 'investment_analysis'
+        self.table = 'test'
+        self.database = 'ias_test'
 
         self.cursor.execute(f"SHOW DATABASES LIKE '{self.database}'")
         result = self.cursor.fetchone()
@@ -28,6 +28,7 @@ class Database:
     def create(self):
         try:
             self.cursor.execute(f"CREATE DATABASE {self.database}")
+            print(f"OK - Database {self.database} created")
             self.cursor.execute(f"USE {self.database}")
             self.cursor.execute(f'''
                 CREATE TABLE {self.table} (
@@ -35,28 +36,29 @@ class Database:
                     fonte VARCHAR(12),
                     data DATE,
                     ativo VARCHAR(6),
-                    cotacao FLOAT(10,2),
-                    p_l FLOAT(10,2),
-                    p_vp FLOAT(10,2),
-                    psr FLOAT(10,2),
-                    div_yield FLOAT(10,2),
-                    p_ativo FLOAT(10,2),
-                    p_cap_giro FLOAT(10,2),
-                    p_ebit FLOAT(10,2),
-                    p_ativo_circ FLOAT(10,2),
-                    ev_ebit FLOAT(10,2),
-                    ev_ebitda FLOAT(10,2),
-                    mrg_ebit FLOAT(10,2),
-                    mrg_liq FLOAT(10,2),
-                    liq_corr FLOAT(10,2),
-                    roic FLOAT(10,2),
-                    roe FLOAT(10,2),
-                    liq_2meses FLOAT(20,2),
-                    patrim_liq FLOAT(20,2),
-                    div_bruta_patrim FLOAT(10,2),
-                    cresc_rec_5anos FLOAT(10,2)
+                    cotacao FLOAT(20,5),
+                    p_l FLOAT(20,5),
+                    p_vp FLOAT(20,5),
+                    psr FLOAT(20,5),
+                    div_yield FLOAT(20,5),
+                    p_ativo FLOAT(20,5),
+                    p_cap_giro FLOAT(20,5),
+                    p_ebit FLOAT(20,5),
+                    p_ativo_circ FLOAT(20,5),
+                    ev_ebit FLOAT(20,5),
+                    ev_ebitda FLOAT(20,5),
+                    mrg_ebit FLOAT(20,5),
+                    mrg_liq FLOAT(20,5),
+                    liq_corr FLOAT(20,5),
+                    roic FLOAT(20,5),
+                    roe FLOAT(20,5),
+                    liq_2meses FLOAT(20,5),
+                    patrim_liq FLOAT(20,5),
+                    div_bruta_patrim FLOAT(20,5),
+                    cresc_rec_5anos FLOAT(20,5)
                 )
             ''')
+            print(f"OK - Table {self.table} created")
         except mysql.connector.Error as error:
             print(f"KO - Creation: {error}")
             exit(1)
@@ -74,32 +76,42 @@ class Database:
                 df = Cleaner(df).clean()
                 self.cursor.execute(f"DESCRIBE {self.table}")
                 columns = [column[0] for column in self.cursor.fetchall() if column[0] != 'id']
-                df_filtered = df[columns]
-                query = f'''
-                    INSERT INTO {self.table} (
-                        {', '.join(columns)}
-                    )
-                    VALUES (
-                        {', '.join(['%s' for _ in columns])}
-                    )
-                '''
                 try:
-                    for _, row in df_filtered.iterrows():
-                        converted_row = []
-                        for value in row:
-                            try:
-                                numeric_value = float(value)
-                                converted_row.append((f'{numeric_value:.2f}'))
-                            except ValueError:
-                                converted_row.append(value)
-                        self.cursor.execute(query, tuple(converted_row))
-                    self.connection.commit()
+                    for _, row in df.iterrows():
+                        date_val = row['data']
+                        ativo_val = row['ativo']
+                        fonte_val = row['fonte']
+                        self.cursor.execute(f"SELECT COUNT(*) FROM {self.table} WHERE `data` = %s AND `ativo` = %s AND `fonte` = %s", (date_val, ativo_val, fonte_val))
+                        count = self.cursor.fetchone()[0]
+                        if count > 0:
+                            # Date already exists, perform UPDATE
+                            update_query = f'''
+                                UPDATE {self.table}
+                                SET {', '.join([f"`{col}` = %s" for col in columns])}
+                                WHERE `data` = %s AND `ativo`= %s AND `fonte` = %s
+                            '''
+                            values = [row[col] for col in columns] + [date_val, ativo_val, fonte_val]
+                            self.cursor.execute(update_query, values)
+                            self.connection.commit()
+                        else:
+                            # Date does not exist, perform INSERT
+                            insert_query = f'''
+                                INSERT INTO {self.table} (
+                                    {', '.join(columns)}
+                                )
+                                VALUES (
+                                    {', '.join(['%s' for _ in columns])}
+                                )
+                            '''
+                            self.cursor.execute(insert_query, tuple(row[columns]))
+                            self.connection.commit()
                 except mysql.connector.Error as error:
                     print(f"KO - Insert data from {df['fonte'][0]}: {error}")
             except pd.errors.ParserError as er:
-                print(f"KO - Insert data from {source['name']}: {er}")
+                print(f"KO - {source['name']}: {er}")
         print(f"OK - Data insert in {self.table}")
         self.cursor.close()
+        self.connection.close()
 
 
 class Cleaner:
@@ -175,6 +187,6 @@ class Cleaner:
 
 
 if __name__ == '__main__':
-    Database()
-    Database().insert_data()
+    db = Database()
+    db.insert_data()
     c.shutil.rmtree('__pycache__')
