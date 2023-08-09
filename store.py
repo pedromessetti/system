@@ -9,8 +9,8 @@ class Database:
     def __init__(self):
         self.connection = mysql.connector.connect(
                 host='localhost',
-                user='root', # <-- put your user here
-                password='Messetti2@13', # <-- put your password here
+                user='investment_admin', # <-- put your user here
+                password='-Gs@IVxBY4jLZ$wM', # <-- put your password here
                 auth_plugin='mysql_native_password'
             )
         self.cursor = self.connection.cursor()
@@ -84,7 +84,7 @@ class Database:
                         self.cursor.execute(f"SELECT COUNT(*) FROM {self.table} WHERE `data` = %s AND `ativo` = %s AND `fonte` = %s", (date_val, ativo_val, fonte_val))
                         count = self.cursor.fetchone()[0]
                         if count > 0:
-                            # Date already exists, perform UPDATE
+                            # Date already exists: UPDATE
                             update_query = f'''
                                 UPDATE {self.table}
                                 SET {', '.join([f"`{col}` = %s" for col in columns])}
@@ -94,7 +94,7 @@ class Database:
                             self.cursor.execute(update_query, values)
                             self.connection.commit()
                         else:
-                            # Date does not exist, perform INSERT
+                            # Date doesn't exist: INSERT
                             insert_query = f'''
                                 INSERT INTO {self.table} (
                                     {', '.join(columns)}

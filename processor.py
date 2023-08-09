@@ -29,9 +29,47 @@ class Analyzer:
         final_df = final_df.fillna(value=0)
         
         self.insert_data(final_df)
+        self.exec_cmd()
         self.cursor.close()
         self.conn.close()
 
+
+    def exec_cmd(self):
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tb_joe_final (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                dt_coleta DATE,
+                fonte VARCHAR(12),
+                versao VARCHAR(8),
+                ativo VARCHAR(6),
+                soma_pontos_pl FLOAT(10,2),
+                soma_pontos_roic FLOAT(10,2)
+            )
+        ''')
+
+        self.cursor.execute('''
+                SELECT
+                    dt_coleta,
+                    fonte,
+                    versao,
+                    ativo,
+                    (pontos_p_l + pontos_roe) AS soma_pontos_pl,
+                    (pontos_ev_ebit + pontos_roic) AS soma_pontos_roic
+                    FROM tb_joe_qual_preco
+                    ORDER BY dt_coleta, fonte, versao, ativo
+            ''')
+        results = self.cursor.fetchall()
+        self.cursor.execute("DESCRIBE tb_joe_final")
+        columns = self.cursor.fetchall()
+        for row in results:
+            column_names = [column[0] for column in columns if column[0] != 'id']
+            query = f'''
+                INSERT INTO tb_joe_final ({', '.join(column_names)})
+                VALUES ({', '.join(['%s' for _ in row])})
+            '''
+            self.cursor.execute(query, tuple(row))
+        self.conn.commit()
+        print('OK - Data insert in tb_joe_final')
 
     def modify_df(self, df, sort_by, drop_col, ascending=False):
         df = df.sort_values(by=[sort_by], ascending=[False])
@@ -56,16 +94,14 @@ class Analyzer:
             df[pontos] = df.iloc[:, -1].iloc[::-1].values
         return df
 
-
     def get_data(self):
-        self.cursor.execute(f"SELECT fonte, data, ativo, p_l, roe, ev_ebit, roic FROM tb_scraping")
+        self.cursor.execute(f"SELECT fonte, data, ativo, p_l, roe, ev_ebit, roic FROM test")
         columns = [column[0] for column in self.cursor.description]
         df = pd.DataFrame(self.cursor.fetchall(), columns=columns)
         return df
-    
 
     def insert_data(self, df):
-        self.cursor.execute(f'''
+        self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tb_joe_qual_preco (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 dt_coleta DATE,
