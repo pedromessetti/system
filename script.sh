@@ -4,7 +4,7 @@
 source ../venv/bin/activate
 
 # Run scraper.py
-#python3.10 scraper.py
+python3.10 scraper.py
 
 # Run store.py
 python3.10 store.py
