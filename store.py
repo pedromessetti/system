@@ -18,12 +18,10 @@ class Database:
         self.database = 'investment_analysis'
 
         self.cursor.execute(f"SHOW DATABASES LIKE '{self.database}'")
-        result = self.cursor.fetchone()
-        if not result:
+        if not self.cursor.fetchone():
             Database.create(self)
         else:
             self.cursor.execute(f"USE {self.database}")
-
 
     def create(self):
         try:
