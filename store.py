@@ -14,8 +14,8 @@ class Database:
                 auth_plugin='mysql_native_password'
             )
         self.cursor = self.connection.cursor()
-        self.table = 'test'
-        self.database = 'ias_test'
+        self.table = 'tb_scraping'
+        self.database = 'investment_analysis'
 
         self.cursor.execute(f"SHOW DATABASES LIKE '{self.database}'")
         result = self.cursor.fetchone()
@@ -76,6 +76,15 @@ class Database:
                 df = Cleaner(df).clean()
                 self.cursor.execute(f"DESCRIBE {self.table}")
                 columns = [column[0] for column in self.cursor.fetchall() if column[0] != 'id']
+                query = f'''
+                    INSERT INTO {self.table} (
+                        {', '.join(columns)}
+                    )
+                    VALUES (
+                        {', '.join(['%s' for _ in columns])}
+                    )
+                '''
+                values_list = [tuple(row[columns]) for _, row in df.iterrows()]
                 try:
                     for _, row in df.iterrows():
                         date_val = row['data']
@@ -83,28 +92,19 @@ class Database:
                         fonte_val = row['fonte']
                         self.cursor.execute(f"SELECT COUNT(*) FROM {self.table} WHERE `data` = %s AND `ativo` = %s AND `fonte` = %s", (date_val, ativo_val, fonte_val))
                         count = self.cursor.fetchone()[0]
+                        counter = 0
                         if count > 0:
-                            # Date already exists: UPDATE
-                            update_query = f'''
+                            if counter == 0:
+                                values_list = []
+                            query = f'''
                                 UPDATE {self.table}
                                 SET {', '.join([f"`{col}` = %s" for col in columns])}
                                 WHERE `data` = %s AND `ativo`= %s AND `fonte` = %s
                             '''
-                            values = [row[col] for col in columns] + [date_val, ativo_val, fonte_val]
-                            self.cursor.execute(update_query, values)
-                            self.connection.commit()
-                        else:
-                            # Date doesn't exist: INSERT
-                            insert_query = f'''
-                                INSERT INTO {self.table} (
-                                    {', '.join(columns)}
-                                )
-                                VALUES (
-                                    {', '.join(['%s' for _ in columns])}
-                                )
-                            '''
-                            self.cursor.execute(insert_query, tuple(row[columns]))
-                            self.connection.commit()
+                            ([row[col] for col in columns] + [date_val, ativo_val, fonte_val]).append(values_list)
+                            counter+=1
+                    self.cursor.executemany(query, values_list)
+                    self.connection.commit()
                 except mysql.connector.Error as error:
                     print(f"KO - Insert data from {df['fonte'][0]}: {error}")
             except pd.errors.ParserError as er:

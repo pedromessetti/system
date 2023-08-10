@@ -94,10 +94,6 @@ class Scraper:
 if __name__ == '__main__':
     if not os.path.exists('csv'):
         os.mkdir('csv')
-    else:
-        for file in os.listdir('./csv'):
-            if not file.endswith(f'_{c.date.today()}.csv'):
-                os.remove(f'./csv/{file}')
     for source in c.sources:
         Scraper(source['url'], source['file_name']).run(source['type'])
     c.shutil.rmtree('__pycache__')
