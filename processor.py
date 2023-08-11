@@ -27,11 +27,11 @@ class Analyzer:
         # df_3 = self.modify_df(self.get_data(), 'ev_ebit', ['roe', 'p_l', 'roic'], True).encode('iso-8859-1')
         # df_4 = self.modify_df(self.get_data(), 'roic', ['p_l', 'ev_ebit', 'roe']).encode('iso-8859-1')
 
-        df_pl = pd.merge(df_1, df_2, on=['ativo', 'data', 'fonte'], how='outer')
+        df_pl = pd.merge(df_1, df_2, on=['ativo', 'dt_coleta', 'fonte'], how='outer')
         df_pl['versao'] = 'joe_pl'
-        df_roic = pd.merge(df_3, df_4, on=['ativo', 'data', 'fonte'], how='outer')
+        df_roic = pd.merge(df_3, df_4, on=['ativo', 'dt_coleta', 'fonte'], how='outer')
         df_roic['versao'] = 'joe_roic'
-        final_df = pd.merge(df_pl, df_roic, on=['ativo', 'data', 'fonte', 'versao'], how='outer')
+        final_df = pd.merge(df_pl, df_roic, on=['ativo', 'dt_coleta', 'fonte', 'versao'], how='outer')
         final_df = final_df.fillna(value=0)
         
         self.insert_data(final_df)
@@ -42,6 +42,8 @@ class Analyzer:
         df = df.sort_values(by=[sort_by], ascending=[False])
         ## Discard unused rows
         df = df.drop(columns=drop_col)
+        ## Rename column 'data' to 'dt_coleta'
+        df = df.rename(columns={'data': 'dt_coleta'})
         ## If the value of the column is 0, discard the row
         df = df[df[sort_by] != 0]
         ## Add new column named 'pontos' to the dataframe, for each row, the value is incremented by 1
@@ -70,7 +72,7 @@ class Analyzer:
             self.cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS {tb} (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    data DATE,
+                    dt_coleta DATE,
                     fonte VARCHAR(12),
                     versao VARCHAR(8),
                     ativo VARCHAR(6),
@@ -89,7 +91,7 @@ class Analyzer:
             self.cursor.execute(f'''
                 CREATE TABLE IF NOT EXISTS {tb} (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    data DATE,
+                    dt_coleta DATE,
                     fonte VARCHAR(12),
                     versao VARCHAR(8),
                     ativo VARCHAR(6),
@@ -111,11 +113,11 @@ class Analyzer:
         '''
         values_list = df.values.tolist()
         for _, row in df.iterrows():
-            data_val = row['data']
+            data_val = row['dt_coleta']
             ativo_val = row['ativo']
             fonte_val = row['fonte']
             versao_val = row['versao']
-            self.cursor.execute(f"SELECT COUNT(*) FROM tb_joe_qual_preco WHERE `data` = %s AND `ativo` = %s AND `fonte` = %s AND `versao` = %s", (data_val, ativo_val, fonte_val, versao_val))
+            self.cursor.execute(f"SELECT COUNT(*) FROM tb_joe_qual_preco WHERE `dt_coleta` = %s AND `ativo` = %s AND `fonte` = %s AND `versao` = %s", (data_val, ativo_val, fonte_val, versao_val))
             count = self.cursor.fetchone()[0]
             counter = 0
             if count > 0:
@@ -124,7 +126,7 @@ class Analyzer:
                 query = f'''
                     UPDATE tb_joe_qual_preco
                     SET {', '.join([f"`{col}` = %s" for col in columns])}
-                    WHERE `data` = %s AND `ativo`= %s AND `fonte` = %s AND `versao` = %s
+                    WHERE `dt_coleta` = %s AND `ativo`= %s AND `fonte` = %s AND `versao` = %s
                 '''
                 ([row[col] for col in columns] + [data_val, ativo_val, fonte_val, versao_val]).append(values_list)
                 counter+=1
@@ -134,14 +136,14 @@ class Analyzer:
         # Insert data in tb_joe_final
         self.cursor.execute('''
                 SELECT
-                    data,
+                    dt_coleta,
                     fonte,
                     versao,
                     ativo,
                     (pontos_p_l + pontos_roe) AS soma_pontos_pl,
                     (pontos_ev_ebit + pontos_roic) AS soma_pontos_roic
                     FROM tb_joe_qual_preco
-                    ORDER BY data, fonte, versao, ativo
+                    ORDER BY dt_coleta, fonte, versao, ativo
             ''')
         results = self.cursor.fetchall()
         self.cursor.execute("DESCRIBE tb_joe_final")
@@ -156,13 +158,13 @@ class Analyzer:
             fonte_val = row[1]
             versao_val = row[2]
             ativo_val = row[3]
-            self.cursor.execute(f"SELECT COUNT(*) FROM tb_joe_final WHERE `data` = %s AND `ativo` = %s AND `fonte` = %s AND `versao` = %s", (data_val, ativo_val, fonte_val, versao_val))
+            self.cursor.execute(f"SELECT COUNT(*) FROM tb_joe_final WHERE `dt_coleta` = %s AND `ativo` = %s AND `fonte` = %s AND `versao` = %s", (data_val, ativo_val, fonte_val, versao_val))
             count = self.cursor.fetchone()[0]
             if count > 0:
                 query = f'''
                     UPDATE tb_joe_final
                     SET {', '.join([f"`{col}` = %s" for col in columns])}
-                    WHERE `data` = %s AND `ativo`= %s AND `fonte` = %s AND `versao` = %s
+                    WHERE `dt_coleta` = %s AND `ativo`= %s AND `fonte` = %s AND `versao` = %s
                 '''
                 values = tuple(row) + (data_val, ativo_val, fonte_val, versao_val)
                 counter+=1
